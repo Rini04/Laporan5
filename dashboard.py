@@ -17,7 +17,7 @@ st.set_page_config(page_title="🧠 Image Classification & Object Detection", la
 @st.cache_resource
 def load_models():
     yolo_model = YOLO("model/Rini Safariani_Laporan 4.pt")  # Model YOLO
-    classifier = tf.keras.models.load_model("model/model_Rini_Lporan 2.h5")  # Model Klasifikasi
+    classifier = tf.keras.models.load_model("model/model_Rini_Laporan 2.h5")  # Model Klasifikasi
     return yolo_model, classifier
 
 try:
