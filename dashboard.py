@@ -13,46 +13,81 @@ from sklearn.cluster import KMeans
 st.set_page_config(page_title="🌸 Flower Vision Pro", layout="wide")
 
 # ==========================
-# CUSTOM BACKGROUND & STYLE
+# CUSTOM CSS — Pastel Floral Glow Theme
 # ==========================
 st.markdown("""
     <style>
+        /* Background gradient pastel elegan */
         .stApp {
-            background-image: url('https://i.ibb.co/Fmfxjwr/flower-bg.jpg');
-            background-size: cover;
+            background: linear-gradient(135deg, #fde2e4 0%, #fad2e1 30%, #e2ece9 70%, #bee1e6 100%);
             background-attachment: fixed;
-            background-position: center;
             color: #2c2c2c;
             font-family: 'Poppins', sans-serif;
         }
+
+        /* Efek bunga lembut di background */
+        .stApp::before {
+            content: "";
+            position: fixed;
+            top: -100px;
+            left: -100px;
+            width: 200%;
+            height: 200%;
+            background-image: radial-gradient(circle at 20% 30%, rgba(255,192,203,0.25) 10%, transparent 40%),
+                              radial-gradient(circle at 80% 70%, rgba(173,216,230,0.25) 15%, transparent 40%),
+                              radial-gradient(circle at 60% 40%, rgba(255,182,193,0.25) 10%, transparent 40%);
+            z-index: -1;
+        }
+
+        /* Header */
         .title {
             text-align: center;
-            color: #3a0ca3;
-            font-size: 42px;
-            font-weight: 700;
+            color: #5a189a;
+            font-size: 45px;
+            font-weight: 800;
             margin-top: 10px;
+            text-shadow: 0 2px 6px rgba(90, 24, 154, 0.2);
         }
         .subtitle {
             text-align: center;
             font-size: 18px;
-            color: #560bad;
-            margin-bottom: 25px;
+            color: #6d597a;
+            margin-bottom: 30px;
         }
+
+        /* Card hasil */
         .result-box {
-            background-color: rgba(255,255,255,0.85);
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(8px);
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
             margin-top: 20px;
         }
+
+        /* Tombol sidebar */
+        .stButton>button {
+            background-color: #f4acb7;
+            color: white;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            transition: 0.3s;
+        }
+        .stButton>button:hover {
+            background-color: #d48cb4;
+            transform: scale(1.03);
+        }
+
         footer {
             text-align: center;
-            color: #6a0572;
+            color: #5c4d7d;
             font-size: 15px;
             margin-top: 40px;
-            background: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.5);
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 15px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -77,12 +112,12 @@ except Exception as e:
 # HEADER
 # ==========================
 st.markdown("<div class='title'>🌸 Flower Vision Pro</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>YOLOv8 + TensorFlow + Tools Analisis Gambar</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Aplikasi Deteksi, Klasifikasi, dan Analisis Gambar dengan Sentuhan Estetik</div>", unsafe_allow_html=True)
 
 # ==========================
 # SIDEBAR
 # ==========================
-st.sidebar.header("⚙️ Menu Fitur")
+st.sidebar.header("🌼 Menu Fitur")
 menu = st.sidebar.radio(
     "Pilih Mode:",
     ["Deteksi Objek (YOLO)", "Klasifikasi Gambar", "Filter Gambar", "Ubah Ukuran/Crop", "Analisis Warna"]
@@ -107,21 +142,15 @@ if uploaded_file:
     st.image(img, caption="📷 Gambar yang Diupload", use_container_width=True)
     st.markdown("---")
 
-    # ==========================
-    # MODE 1: YOLO DETECTION
-    # ==========================
     if menu == "Deteksi Objek (YOLO)":
         st.subheader("🔍 Hasil Deteksi Objek")
-        with st.spinner("Sedang mendeteksi objek..."):
+        with st.spinner("Sedang mendeteksi objek... 🌸"):
             results = yolo_model(img)
             result_img = results[0].plot()
         st.image(result_img, caption="🧩 Hasil Deteksi", use_container_width=True)
 
-    # ==========================
-    # MODE 2: KLASIFIKASI
-    # ==========================
     elif menu == "Klasifikasi Gambar":
-        st.subheader("🧾 Hasil Klasifikasi")
+        st.subheader("🧾 Hasil Klasifikasi Gambar")
         img_resized = img.resize((224, 224))
         img_array = image.img_to_array(img_resized)
         img_array = np.expand_dims(img_array, axis=0) / 255.0
@@ -131,9 +160,6 @@ if uploaded_file:
         st.success(f"🎯 Prediksi: {class_index}")
         st.info(f"📊 Probabilitas: {confidence:.2%}")
 
-    # ==========================
-    # MODE 3: FILTER GAMBAR
-    # ==========================
     elif menu == "Filter Gambar":
         st.subheader("🎨 Terapkan Filter Gambar")
         filter_option = st.selectbox("Pilih Filter:", ["Asli", "Grayscale", "Blur", "Sharpen", "Edge Detection"])
@@ -149,9 +175,6 @@ if uploaded_file:
             img_filtered = img
         st.image(img_filtered, caption=f"Hasil Filter: {filter_option}", use_container_width=True)
 
-    # ==========================
-    # MODE 4: CROP & RESIZE
-    # ==========================
     elif menu == "Ubah Ukuran/Crop":
         st.subheader("✂️ Crop dan Ubah Ukuran")
         width, height = img.size
@@ -160,9 +183,6 @@ if uploaded_file:
         img_resized = img.resize((new_w, new_h))
         st.image(img_resized, caption="📐 Hasil Resize", use_container_width=True)
 
-    # ==========================
-    # MODE 5: ANALISIS WARNA
-    # ==========================
     elif menu == "Analisis Warna":
         st.subheader("🎨 Analisis Warna Dominan")
         colors = get_dominant_colors(img, n_colors=5)
@@ -176,15 +196,15 @@ if uploaded_file:
             col.write(f"{hex_color}")
 
 else:
-    st.warning("📁 Silakan unggah gambar terlebih dahulu.")
+    st.warning("📁 Silakan unggah gambar terlebih dahulu untuk mulai.")
 
 # ==========================
 # FOOTER
 # ==========================
 st.markdown("""
 <footer>
-    🌼 <b>Flower Vision Pro</b> — Aplikasi multi-fungsi karya <b>Rini Safariani</b>.<br>
-    Menggabungkan YOLOv8, TensorFlow, dan Image Analysis.<br>
+    🌷 <b>Flower Vision Pro</b> by <b>Rini Safariani</b><br>
+    YOLOv8 • TensorFlow • Image Analysis • Esthetic UI<br>
     <span style="font-size:13px;">© 2025 All rights reserved.</span>
 </footer>
 """, unsafe_allow_html=True)
