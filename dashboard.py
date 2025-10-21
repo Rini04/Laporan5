@@ -196,7 +196,7 @@ else:
 # ==========================
 st.markdown("""
 <footer>
-    🐾 <b>Animal Vision AI</b> • by Repa Cantikk 🌷<br>
+    🐾 <b>Animal Vision AI</b> • by Rini 🌷<br>
     Letakkan model klasifikasi hewan kamu di folder <code>model/</code> (format .h5)
 </footer>
 """, unsafe_allow_html=True)
