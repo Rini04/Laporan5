@@ -1,168 +1,218 @@
 import streamlit as st
-from ultralytics import YOLO
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
-import cv2
+import glob
+import os
 
 # ==========================
-# KONFIGURASI DASAR
+# PAGE CONFIG
 # ==========================
-st.set_page_config(page_title="🌸 Flower Vision App", layout="wide")
+st.set_page_config(page_title="🐾 Animal Vision AI", layout="wide")
 
 # ==========================
-# CUSTOM CSS BACKGROUND & STYLE
+# CSS THEME (ELEGANT ANIMAL STYLE)
 # ==========================
 st.markdown("""
     <style>
-        /* Background bunga warna-warni */
         .stApp {
-            background-image: url('https://i.ibb.co/Fmfxjwr/flower-bg.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            color: #2c2c2c;
+            background: linear-gradient(145deg, #141E30, #243B55);
+            color: #f5f5f5;
             font-family: 'Poppins', sans-serif;
+            background-image: url('https://images.unsplash.com/photo-1546182990-dffeafbe841d');
+            background-size: cover;
+            background-attachment: fixed;
+            background-blend-mode: overlay;
         }
-
-        /* Overlay agar teks tetap jelas */
-        .st-emotion-cache-1y4p8pa {
-            background: rgba(255, 255, 255, 0.8) !important;
-            border-radius: 15px;
-            padding: 15px;
-        }
-
         .title {
-            text-align: center;
-            color: #3a0ca3;
-            font-size: 42px;
-            font-weight: 700;
-            margin-top: 10px;
+            text-align:center;
+            color:#FFCC70;
+            font-size:45px;
+            font-weight:900;
+            margin-top:10px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
         }
-
         .subtitle {
-            text-align: center;
-            font-size: 18px;
-            color: #560bad;
-            margin-bottom: 25px;
+            text-align:center;
+            color:#E5E5E5;
+            font-size:18px;
+            margin-bottom:25px;
         }
-
         .result-box {
-            background-color: rgba(255,255,255,0.85);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin-top: 20px;
+            background: rgba(255,255,255,0.12);
+            padding:20px;
+            border-radius:16px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
         }
-
         footer {
-            text-align: center;
-            color: #6a0572;
-            font-size: 15px;
-            margin-top: 50px;
-            background: rgba(255, 255, 255, 0.6);
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        /* Tombol sidebar dan elemen interaktif */
-        .stButton>button {
-            background-color: #f72585;
-            color: white;
-            border-radius: 12px;
-            border: none;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-        }
-        .stButton>button:hover {
-            background-color: #b5179e;
-            transition: 0.3s;
+            text-align:center;
+            color:#ccc;
+            margin-top:35px;
+            padding:10px;
+            border-top: 1px solid rgba(255,255,255,0.2);
         }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================
-# LOAD MODEL
+# MODEL LOADING
 # ==========================
-@st.cache_resource
-def load_models():
-    yolo_model = YOLO("model/Rini Safariani_Laporan 4.pt")
-    classifier = tf.keras.models.load_model("model/model_Rini_Laporan 2.h5")
-    return yolo_model, classifier
+MODEL_FOLDER = "model"
 
-try:
-    yolo_model, classifier = load_models()
-    st.sidebar.success("✅ Model berhasil dimuat.")
-except Exception as e:
-    st.sidebar.error(f"❌ Gagal memuat model: {e}")
-    st.stop()
+def find_first(pattern):
+    files = glob.glob(os.path.join(MODEL_FOLDER, pattern))
+    return files[0] if files else None
+
+@st.cache_resource
+def load_model():
+    h5_path = find_first("*.h5")
+    if not h5_path:
+        return None, "no_model"
+    try:
+        model = tf.keras.models.load_model(h5_path)
+        return model, h5_path
+    except Exception as e:
+        return None, f"error:{e}"
+
+model, info = load_model()
+
+# ==========================
+# CLASS LABELS
+# ==========================
+class_names = ["spider", "cat", "dog", "chicken", "horse", "butterfly", "fish"]
+
+# ==========================
+# INFO DATA HEWAN
+# ==========================
+animal_info = {
+    "spider": {
+        "nama": "🕷️ Laba-laba",
+        "habitat": "Biasanya ditemukan di taman, rumah, dan pepohonan.",
+        "makanan": "Serangga kecil seperti lalat atau nyamuk.",
+        "fakta": "Laba-laba membuat jaring sutra yang kuat untuk menangkap mangsanya."
+    },
+    "cat": {
+        "nama": "🐱 Kucing",
+        "habitat": "Rumah dan lingkungan manusia.",
+        "makanan": "Ikan, daging, dan makanan kucing kering.",
+        "fakta": "Kucing dapat tidur hingga 16 jam sehari!"
+    },
+    "dog": {
+        "nama": "🐶 Anjing",
+        "habitat": "Rumah atau lingkungan manusia.",
+        "makanan": "Daging, tulang, dan makanan anjing kering.",
+        "fakta": "Anjing dikenal sangat setia terhadap pemiliknya."
+    },
+    "chicken": {
+        "nama": "🐔 Ayam",
+        "habitat": "Kandang dan ladang peternakan.",
+        "makanan": "Biji-bijian dan serangga kecil.",
+        "fakta": "Ayam dapat mengenali lebih dari 100 wajah manusia!"
+    },
+    "horse": {
+        "nama": "🐴 Kuda",
+        "habitat": "Padang rumput dan peternakan.",
+        "makanan": "Rumput, jerami, dan gandum.",
+        "fakta": "Kuda bisa tidur sambil berdiri."
+    },
+    "butterfly": {
+        "nama": "🦋 Kupu-kupu",
+        "habitat": "Kebun, hutan, dan ladang bunga.",
+        "makanan": "Nektar dari bunga.",
+        "fakta": "Kupu-kupu mencicipi rasa dengan kakinya!"
+    },
+    "fish": {
+        "nama": "🐟 Ikan",
+        "habitat": "Air tawar dan laut.",
+        "makanan": "Plankton, cacing, dan serangga air.",
+        "fakta": "Beberapa ikan bisa tidur dengan mata terbuka!"
+    }
+}
 
 # ==========================
 # HEADER
 # ==========================
-st.markdown("<div class='title'>🌸 Flower Vision App</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Deteksi dan Klasifikasi Gambar Menggunakan <b>YOLOv8</b> & <b>TensorFlow</b></div>", unsafe_allow_html=True)
+st.markdown("<div class='title'>🐾 Animal Vision AI</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Klasifikasi Citra Hewan — Model Cerdas dan Elegan</div>", unsafe_allow_html=True)
 
 # ==========================
-# SIDEBAR
+# SIDEBAR STATUS
 # ==========================
-st.sidebar.header("⚙️ Pengaturan")
-menu = st.sidebar.radio("Pilih Mode:", ["Deteksi Objek (YOLO)", "Klasifikasi Gambar"])
-uploaded_file = st.sidebar.file_uploader("📤 Unggah Gambar", type=["jpg", "jpeg", "png"])
-
-# ==========================
-# PROSES FILE YANG DI-UPLOAD
-# ==========================
-if uploaded_file is not None:
-    img = Image.open(uploaded_file).convert("RGB")
-
-    col1, col2 = st.columns([1, 1.2])
-    with col1:
-        st.image(img, caption="📷 Gambar yang Diupload", use_container_width=True)
-    with col2:
-        st.markdown("<div class='result-box'>", unsafe_allow_html=True)
-
-        # ==========================
-        # MODE DETEKSI OBJEK
-        # ==========================
-        if menu == "Deteksi Objek (YOLO)":
-            st.subheader("🔍 Hasil Deteksi Objek")
-            with st.spinner("Sedang mendeteksi objek... 🌼"):
-                results = yolo_model(img)
-                result_img = results[0].plot()
-            st.image(result_img, caption="🧩 Hasil Deteksi Objek", use_container_width=True)
-
-        # ==========================
-        # MODE KLASIFIKASI GAMBAR
-        # ==========================
-        elif menu == "Klasifikasi Gambar":
-            st.subheader("🧾 Hasil Klasifikasi Gambar")
-            with st.spinner("Sedang mengklasifikasi gambar... 🌷"):
-                img_resized = img.resize((224, 224))
-                img_array = image.img_to_array(img_resized)
-                img_array = np.expand_dims(img_array, axis=0) / 255.0
-
-                prediction = classifier.predict(img_array)
-                class_index = np.argmax(prediction)
-                confidence = np.max(prediction)
-
-            st.success(f"🎯 **Prediksi:** {class_index}")
-            st.info(f"📊 **Probabilitas:** {confidence:.2%}")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
+st.sidebar.header("📦 Status Model")
+if model is None:
+    if info == "no_model":
+        st.sidebar.error("❌ Tidak ditemukan file .h5 di folder 'model/'.")
+    else:
+        st.sidebar.error(f"❌ Gagal memuat model: {info}")
 else:
-    st.warning("📁 Silakan unggah gambar terlebih dahulu melalui sidebar untuk memulai analisis.")
+    st.sidebar.success(f"✅ Model berhasil dimuat dari:\n{info}")
+
+# ==========================
+# UPLOAD GAMBAR
+# ==========================
+uploaded_file = st.file_uploader("📤 Unggah gambar hewan (.jpg .jpeg .png)", type=["jpg", "jpeg", "png"])
+
+def preprocess_image(pil_img, size=(224, 224)):
+    img_resized = pil_img.resize(size)
+    arr = image.img_to_array(img_resized)
+    arr = np.expand_dims(arr, axis=0) / 255.0
+    return arr
+
+def predict_image(model, pil_img):
+    arr = preprocess_image(pil_img)
+    preds = model.predict(arr)
+    idx = int(np.argmax(preds))
+    confidence = float(np.max(preds))
+    label = class_names[idx] if idx < len(class_names) else "unknown"
+    return label, confidence
+
+# ==========================
+# MAIN DISPLAY
+# ==========================
+if uploaded_file:
+    try:
+        img = Image.open(uploaded_file).convert("RGB")
+        st.image(img, caption="📸 Gambar yang diunggah", use_container_width=True)
+    except Exception as e:
+        st.error(f"❌ Gagal membuka gambar: {e}")
+        st.stop()
+
+    st.markdown("---")
+
+    if model is None:
+        st.error("Model tidak tersedia. Letakkan file .h5 di folder 'model/'.")
+    else:
+        with st.spinner("🔮 Menganalisis gambar..."):
+            try:
+                label, conf = predict_image(model, img)
+            except Exception as e:
+                st.error(f"Error saat prediksi: {e}")
+                st.stop()
+
+        if label not in animal_info:
+            st.warning(f"Prediksi: {label} (data tidak lengkap). Confidence: {conf:.2%}")
+        else:
+            info_obj = animal_info[label]
+            st.success(f"🌟 Teridentifikasi: {info_obj['nama']} — Confidence: {conf*100:.2f}%")
+            st.markdown(f"""
+            <div class='result-box'>
+                <h3>{info_obj['nama']}</h3>
+                <b>🌍 Habitat:</b> {info_obj['habitat']}<br>
+                <b>🍽️ Makanan:</b> {info_obj['makanan']}<br>
+                <b>💡 Fakta menarik:</b> {info_obj['fakta']}
+            </div>
+            """, unsafe_allow_html=True)
+else:
+    st.info("📁 Unggah gambar untuk memulai klasifikasi. Pastikan file model (.h5) sudah ada di folder 'model/'.")
 
 # ==========================
 # FOOTER
 # ==========================
 st.markdown("""
-    <footer>
-        🌼 Dibuat dengan cinta oleh <b>Rini Safariani</b><br>
-        Menggabungkan <b>YOLOv8</b> & <b>TensorFlow</b> dalam satu aplikasi interaktif.<br>
-        <span style="font-size:13px;">© 2025 — All rights reserved.</span>
-    </footer>
+<footer>
+    🐾 <b>Animal Vision AI</b> • by Repa Cantikk 🌷<br>
+    Letakkan model klasifikasi hewan kamu di folder <code>model/</code> (format .h5)
+</footer>
 """, unsafe_allow_html=True)
