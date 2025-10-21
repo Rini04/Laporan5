@@ -87,48 +87,27 @@ class_names = ["spider", "cat", "dog", "chicken", "horse", "butterfly", "fish"]
 # INFO DATA HEWAN
 # ==========================
 animal_info = {
-    "spider": {
-        "nama": "🕷️ Laba-laba",
-        "habitat": "Biasanya ditemukan di taman, rumah, dan pepohonan.",
-        "makanan": "Serangga kecil seperti lalat atau nyamuk.",
-        "fakta": "Laba-laba membuat jaring sutra yang kuat untuk menangkap mangsanya."
-    },
-    "cat": {
-        "nama": "🐱 Kucing",
-        "habitat": "Rumah dan lingkungan manusia.",
-        "makanan": "Ikan, daging, dan makanan kucing kering.",
-        "fakta": "Kucing dapat tidur hingga 16 jam sehari!"
-    },
-    "dog": {
-        "nama": "🐶 Anjing",
-        "habitat": "Rumah atau lingkungan manusia.",
-        "makanan": "Daging, tulang, dan makanan anjing kering.",
-        "fakta": "Anjing dikenal sangat setia terhadap pemiliknya."
-    },
-    "chicken": {
-        "nama": "🐔 Ayam",
-        "habitat": "Kandang dan ladang peternakan.",
-        "makanan": "Biji-bijian dan serangga kecil.",
-        "fakta": "Ayam dapat mengenali lebih dari 100 wajah manusia!"
-    },
-    "horse": {
-        "nama": "🐴 Kuda",
-        "habitat": "Padang rumput dan peternakan.",
-        "makanan": "Rumput, jerami, dan gandum.",
-        "fakta": "Kuda bisa tidur sambil berdiri."
-    },
-    "butterfly": {
-        "nama": "🦋 Kupu-kupu",
-        "habitat": "Kebun, hutan, dan ladang bunga.",
-        "makanan": "Nektar dari bunga.",
-        "fakta": "Kupu-kupu mencicipi rasa dengan kakinya!"
-    },
-    "fish": {
-        "nama": "🐟 Ikan",
-        "habitat": "Air tawar dan laut.",
-        "makanan": "Plankton, cacing, dan serangga air.",
-        "fakta": "Beberapa ikan bisa tidur dengan mata terbuka!"
-    }
+    "spider": {"nama": "🕷️ Laba-laba", "habitat": "Taman, rumah, pepohonan.",
+               "makanan": "Serangga kecil seperti lalat atau nyamuk.",
+               "fakta": "Laba-laba membuat jaring sutra yang kuat untuk menangkap mangsanya."},
+    "cat": {"nama": "🐱 Kucing", "habitat": "Lingkungan rumah manusia.",
+            "makanan": "Ikan, daging, makanan kucing kering.",
+            "fakta": "Kucing dapat tidur hingga 16 jam sehari!"},
+    "dog": {"nama": "🐶 Anjing", "habitat": "Lingkungan rumah manusia.",
+            "makanan": "Daging, tulang, makanan anjing kering.",
+            "fakta": "Anjing dikenal sangat setia terhadap pemiliknya."},
+    "chicken": {"nama": "🐔 Ayam", "habitat": "Kandang dan ladang peternakan.",
+                "makanan": "Biji-bijian dan serangga kecil.",
+                "fakta": "Ayam dapat mengenali lebih dari 100 wajah manusia!"},
+    "horse": {"nama": "🐴 Kuda", "habitat": "Padang rumput dan peternakan.",
+              "makanan": "Rumput, jerami, gandum.",
+              "fakta": "Kuda bisa tidur sambil berdiri."},
+    "butterfly": {"nama": "🦋 Kupu-kupu", "habitat": "Kebun, hutan, ladang bunga.",
+                  "makanan": "Nektar bunga.",
+                  "fakta": "Kupu-kupu mencicipi rasa dengan kakinya!"},
+    "fish": {"nama": "🐟 Ikan", "habitat": "Air tawar dan laut.",
+             "makanan": "Plankton, cacing, serangga air.",
+             "fakta": "Beberapa ikan bisa tidur dengan mata terbuka!"}
 }
 
 # ==========================
@@ -148,20 +127,25 @@ if model is None:
         st.sidebar.error(f"❌ Gagal memuat model: {info}")
 else:
     st.sidebar.success(f"✅ Model berhasil dimuat dari:\n{info}")
+    st.sidebar.write(f"📏 Input model: {model.input_shape}")
 
 # ==========================
 # UPLOAD GAMBAR
 # ==========================
 uploaded_file = st.file_uploader("📤 Unggah gambar hewan (.jpg .jpeg .png)", type=["jpg", "jpeg", "png"])
 
-def preprocess_image(pil_img, size=(224, 224)):
-    img_resized = pil_img.resize(size)
+# ==========================
+# FIX PREPROCESSING (auto menyesuaikan ukuran input model)
+# ==========================
+def preprocess_image(pil_img, model):
+    input_shape = model.input_shape[1:3] if model and model.input_shape else (224, 224)
+    img_resized = pil_img.resize(input_shape)
     arr = image.img_to_array(img_resized)
     arr = np.expand_dims(arr, axis=0) / 255.0
     return arr
 
 def predict_image(model, pil_img):
-    arr = preprocess_image(pil_img)
+    arr = preprocess_image(pil_img, model)
     preds = model.predict(arr)
     idx = int(np.argmax(preds))
     confidence = float(np.max(preds))
@@ -174,7 +158,7 @@ def predict_image(model, pil_img):
 if uploaded_file:
     try:
         img = Image.open(uploaded_file).convert("RGB")
-        st.image(img, caption="📸 Gambar yang diunggah", use_container_width=True)
+        st.image(img, caption="📸 Gambar yang diunggah", width='stretch')
     except Exception as e:
         st.error(f"❌ Gagal membuka gambar: {e}")
         st.stop()
