@@ -5,7 +5,7 @@ numpy==1.26.4
 pillow==10.4.0
 opencv-python-headless==4.10.0.84
 protobuf==4.25.3
-h5py==3.11.0
+h5py==3.10.0
 matplotlib==3.9.2
 scikit-learn==1.5.2
 plotly==5.24.1
