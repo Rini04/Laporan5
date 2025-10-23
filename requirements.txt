@@ -1,5 +1,5 @@
-streamlit
-streamlit-extras
-pillow
-tensorflow
+streamlit 
+streamlit-extras 
+pillow 
+tensorflow 
 numpy
