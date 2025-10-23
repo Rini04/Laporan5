@@ -79,6 +79,33 @@ st.markdown("""
             padding:10px;
             border-top: 1px solid rgba(255,255,255,0.2);
         }
+        .sidebar-title {
+            text-align:center;
+            font-weight:700;
+            font-size:22px;
+            color:#FFD700;
+            text-shadow: 1px 1px 4px rgba(255,215,0,0.7);
+            margin-bottom:10px;
+        }
+        .nav-button {
+            background: rgba(255,255,255,0.1);
+            border-radius:12px;
+            padding:10px 15px;
+            margin:6px 0;
+            text-align:left;
+            font-size:16px;
+            color:#fff;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .nav-button:hover {
+            background: rgba(255,215,0,0.2);
+            transform: translateX(3px);
+        }
+        .selected {
+            background: rgba(255,215,0,0.3);
+            border-left: 4px solid #FFD700;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -105,13 +132,10 @@ def load_model():
 model, info = load_model()
 
 # ================================
-# CLASS NAMES
+# CLASS NAMES & INFO
 # ================================
 class_names = ["spider", "cat", "dog", "chicken", "horse", "butterfly", "fish"]
 
-# ================================
-# ANIMAL INFO
-# ================================
 animal_info = {
     "spider": {"nama":"🕷️ Laba-laba","habitat":"Taman dan pepohonan","makanan":"Serangga kecil","fakta":"Jaring sutranya lebih kuat dari baja."},
     "cat": {"nama":"🐱 Kucing","habitat":"Rumah & kota","makanan":"Ikan & daging","fakta":"Kucing tidur hingga 16 jam per hari."},
@@ -129,29 +153,19 @@ st.markdown("<div class='title'>🐾 Animal Vision AI</div>", unsafe_allow_html=
 st.markdown("<div class='subtitle'>Klasifikasi Gambar Hewan dengan Model Cerdas dan Tampilan Cantik 🌸</div>", unsafe_allow_html=True)
 
 # ================================
-# SIDEBAR - STATUS MODEL
+# SIDEBAR NAVIGASI
 # ================================
-st.sidebar.header("📦 Status Model")
-
-if model is None:
-    if info == "no_model":
-        st.sidebar.error("❌ Tidak ditemukan file .h5 di folder 'model/'.")
-    else:
-        st.sidebar.error(f"❌ Gagal memuat model: {info}")
-else:
-    st.sidebar.markdown(f"""
-    <div class='model-box'>
-        <h4>✅ Model berhasil dimuat</h4>
-        <p><b>📁 Lokasi:</b><br>{info}</p>
-        <p><b>🔢 Input model:</b><br>(None, 128, 128, 3)</p>
-    </div>
-    """, unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-title'>📋 Menu Navigasi</div>", unsafe_allow_html=True)
+menu = st.sidebar.radio(
+    "",
+    ["🏠 Status Model", "📸 Prediksi Hewan", "ℹ️ Tentang Aplikasi"],
+    index=0
+)
+st.sidebar.markdown("<hr>", unsafe_allow_html=True)
 
 # ================================
-# UPLOAD GAMBAR
+# FUNGSI BANTUAN
 # ================================
-uploaded_file = st.file_uploader("📤 Unggah gambar hewan (.jpg .jpeg .png)", type=["jpg", "jpeg", "png"])
-
 def preprocess_image(pil_img, size=(128, 128)):
     img_resized = pil_img.resize(size)
     arr = image.img_to_array(img_resized)
@@ -167,62 +181,90 @@ def predict_image(model, pil_img):
     return label, confidence
 
 # ================================
-# MAIN DISPLAY
+# HALAMAN NAVIGASI
 # ================================
-if uploaded_file:
-    try:
-        img = Image.open(uploaded_file).convert("RGB")
-        st.image(img, caption="📸 Gambar yang diunggah", width=400)
-    except Exception as e:
-        st.error(f"❌ Gagal membuka gambar: {e}")
-        st.stop()
-
-    st.markdown("---")
-
+if menu == "🏠 Status Model":
     if model is None:
-        st.error("Model tidak tersedia. Letakkan file .h5 di folder 'model/'.")
+        if info == "no_model":
+            st.error("❌ Tidak ditemukan file .h5 di folder 'model/'.")
+        else:
+            st.error(f"❌ Gagal memuat model: {info}")
     else:
-        # Animasi lucu 🐱✨
-        with st.spinner("🔮 Menganalisis gambar..."):
-            placeholder = st.empty()
-            with placeholder.container():
-                st.markdown("""
-                <div class="loader">
-                    <img src="https://media.tenor.com/JL1JQJt_1fEAAAAi/cat-cute.gif">
-                    <p>✨ Kucing imut lagi mikir... tunggu sebentar ya! ✨</p>
+        st.markdown(f"""
+        <div class='model-box'>
+            <h4>✅ Model berhasil dimuat</h4>
+            <p><b>📁 Lokasi:</b><br>{info}</p>
+            <p><b>🔢 Input model:</b><br>(None, 128, 128, 3)</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif menu == "📸 Prediksi Hewan":
+    uploaded_file = st.file_uploader("📤 Unggah gambar hewan (.jpg .jpeg .png)", type=["jpg", "jpeg", "png"])
+    if uploaded_file:
+        try:
+            img = Image.open(uploaded_file).convert("RGB")
+            st.image(img, caption="📸 Gambar yang diunggah", width=400)
+        except Exception as e:
+            st.error(f"❌ Gagal membuka gambar: {e}")
+            st.stop()
+
+        st.markdown("---")
+
+        if model is None:
+            st.error("Model tidak tersedia. Letakkan file .h5 di folder 'model/'.")
+        else:
+            with st.spinner("🔮 Menganalisis gambar..."):
+                placeholder = st.empty()
+                with placeholder.container():
+                    st.markdown("""
+                    <div class="loader">
+                        <img src="https://media.tenor.com/JL1JQJt_1fEAAAAi/cat-cute.gif">
+                        <p>✨ Kucing imut lagi mikir... tunggu sebentar ya! ✨</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                time.sleep(3)
+                placeholder.empty()
+
+                try:
+                    label, conf = predict_image(model, img)
+                except Exception as e:
+                    st.error(f"Error saat prediksi: {e}")
+                    st.stop()
+
+            if label not in animal_info:
+                st.warning(f"Prediksi: {label} (data tidak lengkap). Confidence: {conf:.2%}")
+            else:
+                info_obj = animal_info[label]
+                st.markdown(f"""
+                <div class='result-box'>
+                    <h3 class='animal-name'>{info_obj['nama']}</h3>
+                    <b>🌍 Habitat:</b> {info_obj['habitat']}<br>
+                    <b>🍽️ Makanan:</b> {info_obj['makanan']}<br>
+                    <b>💡 Fakta menarik:</b> {info_obj['fakta']}<br><br>
+                    <i>Confidence:</i> <b>{conf*100:.2f}%</b>
                 </div>
                 """, unsafe_allow_html=True)
-            time.sleep(3)  # simulasi proses
-            placeholder.empty()
+    else:
+        st.info("📁 Unggah gambar untuk mulai klasifikasi.")
 
-            try:
-                label, conf = predict_image(model, img)
-            except Exception as e:
-                st.error(f"Error saat prediksi: {e}")
-                st.stop()
-
-        if label not in animal_info:
-            st.warning(f"Prediksi: {label} (data tidak lengkap). Confidence: {conf:.2%}")
-        else:
-            info_obj = animal_info[label]
-            st.markdown(f"""
-            <div class='result-box'>
-                <h3 class='animal-name'>{info_obj['nama']}</h3>
-                <b>🌍 Habitat:</b> {info_obj['habitat']}<br>
-                <b>🍽️ Makanan:</b> {info_obj['makanan']}<br>
-                <b>💡 Fakta menarik:</b> {info_obj['fakta']}<br><br>
-                <i>Confidence:</i> <b>{conf*100:.2f}%</b>
-            </div>
-            """, unsafe_allow_html=True)
-else:
-    st.info("📁 Unggah gambar untuk mulai klasifikasi. Pastikan file model (.h5) sudah ada di folder 'model/'.")
+elif menu == "ℹ️ Tentang Aplikasi":
+    st.markdown("""
+    <div class='result-box'>
+        <h3>🌷 Tentang Animal Vision AI</h3>
+        <p>Aplikasi ini menggunakan teknologi <b>Deep Learning</b> untuk mengenali berbagai jenis hewan 
+        dari gambar yang diunggah. Dirancang dengan tampilan elegan dan interaktif oleh 
+        <b>Rini </b>.</p>
+        <p>🧠 Model dikembangkan menggunakan TensorFlow dan Keras.</p>
+        <p>✨ Coba unggah gambar hewan favoritmu dan lihat hasil prediksinya!</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ================================
 # FOOTER
 # ================================
 st.markdown("""
 <footer>
-    🌷 <b>Animal Vision AI</b> — by Repa Cantikk 💕<br>
+    🌷 <b>Animal Vision AI</b> — by Rini <br>
     Letakkan file model di folder <code>model/</code> (format .h5)
 </footer>
 """, unsafe_allow_html=True)
