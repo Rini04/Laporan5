@@ -1,92 +1,166 @@
 import streamlit as st
-from streamlit_lottie import st_lottie
-import json
-import requests
+import tensorflow as tf
+from tensorflow.keras.preprocessing import image
+import numpy as np
+from PIL import Image
+import os, glob
 
-# === Konfigurasi dasar halaman ===
-st.set_page_config(page_title="Dashboard Prediksi AI", page_icon="🐾", layout="wide")
+# ==========================
+# PAGE CONFIG
+# ==========================
+st.set_page_config(page_title="🐾 Dashboard Prediksi Hewan AI", layout="wide")
 
-# === CSS untuk background dan gaya ===
-page_bg = """
-<style>
-/* Background utama */
-[data-testid="stAppViewContainer"] {
-    background-image: url("https://images.unsplash.com/photo-1518791841217-8f162f1e1131");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    color: white;
-}
+# ==========================
+# CSS THEME (ELEGANT ANIMAL STYLE)
+# ==========================
+st.markdown("""
+    <style>
+        .stApp {
+            background: linear-gradient(145deg, #141E30, #243B55);
+            color: #f5f5f5;
+            font-family: 'Poppins', sans-serif;
+            background-image: url('https://images.unsplash.com/photo-1517849845537-4d257902454a');
+            background-size: cover;
+            background-attachment: fixed;
+            background-blend-mode: overlay;
+        }
+        .title {
+            text-align:center;
+            color:#FFD369;
+            font-size:46px;
+            font-weight:900;
+            margin-top:10px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.7);
+        }
+        .subtitle {
+            text-align:center;
+            color:#EEEEEE;
+            font-size:18px;
+            margin-bottom:30px;
+        }
+        .navbox {
+            background: rgba(255,255,255,0.08);
+            padding:15px;
+            border-radius:15px;
+            margin-top:10px;
+        }
+        footer {
+            text-align:center;
+            color:#ccc;
+            margin-top:40px;
+            padding:10px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-/* Sidebar dibuat transparan gelap elegan */
-[data-testid="stSidebar"] {
-    background: rgba(0, 0, 0, 0.75);
-    color: white;
-}
+# ==========================
+# MODEL LOADING
+# ==========================
+MODEL_FOLDER = "model"
 
-/* Judul */
-h1 {
-    color: #FFD700;
-    text-shadow: 2px 2px 5px #000000;
-}
+def find_first(pattern):
+    files = glob.glob(os.path.join(MODEL_FOLDER, pattern))
+    return files[0] if files else None
 
-/* Teks umum */
-p, label, span, div {
-    color: #f8f8f8 !important;
-}
+@st.cache_resource
+def load_model():
+    h5_path = find_first("*.h5")
+    if not h5_path:
+        return None, "no_model"
+    try:
+        model = tf.keras.models.load_model(h5_path)
+        return model, h5_path
+    except Exception as e:
+        return None, f"error:{e}"
 
-/* Upload box transparan */
-section[data-testid="stFileUploaderDropzone"] {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 2px dashed #FFD700;
-}
-</style>
-"""
-st.markdown(page_bg, unsafe_allow_html=True)
+model, info = load_model()
 
-# === Sidebar Navigasi ===
+# ==========================
+# CLASS LABELS
+# ==========================
+class_names = ["spider", "cat", "dog", "chicken", "horse", "butterfly", "fish"]
+
+# ==========================
+# SIDEBAR NAVIGATION
+# ==========================
 st.sidebar.title("🧭 Navigasi")
-menu = st.sidebar.radio("Pilih Halaman", ["🏠 Home", "📤 Upload Gambar", "🔮 Prediksi", "ℹ️ Tentang Model"])
+page = st.sidebar.radio("Pilih Halaman", ["🏠 Home", "📤 Upload Gambar", "🔮 Prediksi", "ℹ️ Tentang Model"])
 
-# === Fungsi Animasi ===
-def load_lottie_url(url):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
+# ==========================
+# HALAMAN HOME
+# ==========================
+if page == "🏠 Home":
+    st.markdown("<div class='title'>🐾 Dashboard Prediksi Hewan AI</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitle'>Selamat datang di dashboard prediksi hewan AI karya <b>Rini Safariani</b> 💫<br>Temukan kecerdasan buatan dalam mengenali berbagai jenis hewan dengan tampilan elegan dan interaktif.</div>", unsafe_allow_html=True)
 
-lottie_animal = load_lottie_url("https://assets10.lottiefiles.com/packages/lf20_pprxh53t.json")
+# ==========================
+# HALAMAN UPLOAD GAMBAR
+# ==========================
+elif page == "📤 Upload Gambar":
+    st.markdown("<div class='title'>📸 Upload Gambar Hewan</div>", unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("Unggah gambar hewan (jpg, jpeg, png)", type=["jpg", "jpeg", "png"])
 
-# === Halaman Home ===
-if menu == "🏠 Home":
-    st_lottie(lottie_animal, height=200, key="animal")
-    st.markdown("<h1>🐾 Dashboard Prediksi Model AI</h1>", unsafe_allow_html=True)
-    st.write("Selamat datang di dashboard prediksi berbasis citra bertema hewan 🐶🐱🐰! Gunakan navigasi di samping kiri untuk mengunggah gambar dan melihat hasil prediksi.")
-
-# === Halaman Upload Gambar ===
-elif menu == "📤 Upload Gambar":
-    st.markdown("<h1>📤 Upload Gambar</h1>", unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Unggah gambar untuk diprediksi", type=["jpg", "jpeg", "png"])
     if uploaded_file:
-        st.image(uploaded_file, caption="Gambar yang kamu unggah", use_container_width=True)
-        st.session_state['uploaded_file'] = uploaded_file
-        st.success("✅ Gambar berhasil diunggah!")
+        img = Image.open(uploaded_file).convert("RGB")
+        st.image(img, caption="Gambar yang diunggah", use_container_width=True)
+        st.session_state["uploaded_img"] = img
+        st.success("✅ Gambar berhasil diunggah! Silakan menuju menu 'Prediksi' untuk analisis.")
 
-# === Halaman Prediksi ===
-elif menu == "🔮 Prediksi":
-    st.markdown("<h1>🔮 Hasil Prediksi</h1>", unsafe_allow_html=True)
-    if 'uploaded_file' in st.session_state:
-        st.image(st.session_state['uploaded_file'], caption="Gambar yang diprediksi", use_container_width=True)
-        st.info("✨ Hasil prediksi akan tampil di sini setelah model AI dijalankan.")
+# ==========================
+# HALAMAN PREDIKSI
+# ==========================
+elif page == "🔮 Prediksi":
+    st.markdown("<div class='title'>🔮 Prediksi Hewan</div>", unsafe_allow_html=True)
+
+    if "uploaded_img" not in st.session_state:
+        st.warning("⚠️ Silakan unggah gambar terlebih dahulu melalui menu 'Upload Gambar'.")
     else:
-        st.warning("⚠️ Harap unggah gambar terlebih dahulu di menu 'Upload Gambar'!")
+        img = st.session_state["uploaded_img"]
+        st.image(img, caption="Gambar yang akan diprediksi", use_container_width=True)
 
-# === Halaman Tentang Model ===
-elif menu == "ℹ️ Tentang Model":
-    st.markdown("<h1>ℹ️ Tentang Model</h1>", unsafe_allow_html=True)
-    st.write("""
-    Dashboard ini dikembangkan oleh **Repa Cantikk ✨**,  
-    menampilkan hasil prediksi model AI untuk mengenali citra bertema hewan.  
-    Dikembangkan dengan framework **Streamlit** dan **TensorFlow** 🧠🐾.
-    """)
+        def preprocess_image(pil_img, size=(128, 128)):
+            img_resized = pil_img.resize(size)
+            arr = image.img_to_array(img_resized)
+            arr = np.expand_dims(arr, axis=0) / 255.0
+            return arr
 
+        def predict_image(model, pil_img):
+            arr = preprocess_image(pil_img)
+            preds = model.predict(arr)
+            idx = int(np.argmax(preds))
+            confidence = float(np.max(preds))
+            label = class_names[idx] if idx < len(class_names) else "unknown"
+            return label, confidence
+
+        if model is None:
+            st.error("❌ Model belum tersedia di folder 'model/'.")
+        else:
+            with st.spinner("⏳ Menganalisis gambar..."):
+                try:
+                    label, conf = predict_image(model, img)
+                    st.success(f"🌟 Hasil Prediksi: {label} ({conf*100:.2f}% akurasi)")
+                except Exception as e:
+                    st.error(f"Terjadi kesalahan saat prediksi: {e}")
+
+# ==========================
+# HALAMAN TENTANG MODEL
+# ==========================
+elif page == "ℹ️ Tentang Model":
+    st.markdown("<div class='title'>ℹ️ Tentang Model</div>", unsafe_allow_html=True)
+    if model is None:
+        st.warning("Model belum dimuat.")
+    else:
+        st.success(f"✅ Model berhasil dimuat dari: {info}")
+        st.markdown("📐 **Arsitektur Model AI**:")
+        st.json({"Input Shape": "(None, 128, 128, 3)", "Output Classes": class_names})
+
+# ==========================
+# FOOTER
+# ==========================
+st.markdown("""
+<footer>
+    🐾 <b>Animal Vision AI Dashboard</b> by <b>Rini Safariani</b> 🌷<br>
+    © 2025 All Rights Reserved.
+</footer>
+""", unsafe_allow_html=True)
