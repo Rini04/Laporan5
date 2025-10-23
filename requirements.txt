@@ -1,7 +1,6 @@
-streamlit>=1.27.0
-tensorflow-cpu>=2.14.0
-numpy>=1.23.5
-pillow>=10.0.0
-h5py>=3.8.0
-protobuf>=3.20.3
-altair>=5.0.0
+streamlit 
+tensorflow 
+pillow 
+numpy 
+requests 
+streamlit-lottie
