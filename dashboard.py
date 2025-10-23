@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 import glob
 import os
+import time
 
 # ================================
 # PAGE CONFIG
@@ -58,6 +59,18 @@ st.markdown("""
             font-weight: 700;
             font-size: 24px;
             text-shadow: 0 0 10px rgba(255,215,0,0.6);
+        }
+        .loader {
+            text-align:center;
+            margin-top:20px;
+        }
+        .loader img {
+            width:150px;
+            animation: spin 3s linear infinite;
+        }
+        @keyframes spin {
+            0% {transform: rotate(0deg);}
+            100% {transform: rotate(360deg);}
         }
         footer {
             text-align:center;
@@ -169,7 +182,19 @@ if uploaded_file:
     if model is None:
         st.error("Model tidak tersedia. Letakkan file .h5 di folder 'model/'.")
     else:
+        # Animasi lucu 🐱✨
         with st.spinner("🔮 Menganalisis gambar..."):
+            placeholder = st.empty()
+            with placeholder.container():
+                st.markdown("""
+                <div class="loader">
+                    <img src="https://media.tenor.com/JL1JQJt_1fEAAAAi/cat-cute.gif">
+                    <p>✨ Kucing imut lagi mikir... tunggu sebentar ya! ✨</p>
+                </div>
+                """, unsafe_allow_html=True)
+            time.sleep(3)  # simulasi proses
+            placeholder.empty()
+
             try:
                 label, conf = predict_image(model, img)
             except Exception as e:
