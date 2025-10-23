@@ -65,6 +65,30 @@ fakta_hewan = {
         "Fakta Unik": "Kupu-kupu bisa merasakan rasa manis menggunakan kakinya!",
         "Klasifikasi Ilmiah": "Kingdom: Animalia | Filum: Arthropoda | Kelas: Insecta | Ordo: Lepidoptera",
         "Status Konservasi": "Sebagian besar aman, tetapi beberapa spesies langka."
+    },
+    "Kuda": {
+        "Habitat": "Kuda hidup di padang rumput, sabana, dan sering dipelihara manusia di kandang luas.",
+        "Fakta Unik": "Kuda dapat tidur sambil berdiri dan memiliki ingatan yang sangat tajam.",
+        "Klasifikasi Ilmiah": "Kingdom: Animalia | Filum: Chordata | Kelas: Mammalia | Ordo: Perissodactyla | Famili: Equidae",
+        "Status Konservasi": "Domestik (Tidak terancam punah)"
+    },
+    "Laba-Laba": {
+        "Habitat": "Laba-laba dapat ditemukan di hampir semua tempat, mulai dari rumah hingga hutan tropis.",
+        "Fakta Unik": "Laba-laba memintal jaring dengan benang yang lebih kuat dari baja dengan ketebalan yang sama.",
+        "Klasifikasi Ilmiah": "Kingdom: Animalia | Filum: Arthropoda | Kelas: Arachnida | Ordo: Araneae",
+        "Status Konservasi": "Beragam tergantung spesies"
+    },
+    "Ikan": {
+        "Habitat": "Ikan hidup di berbagai lingkungan perairan seperti laut, sungai, dan danau.",
+        "Fakta Unik": "Beberapa jenis ikan bisa bersinar dalam gelap (bioluminesensi) dan bernapas melalui insang.",
+        "Klasifikasi Ilmiah": "Kingdom: Animalia | Filum: Chordata | Kelas: Pisces",
+        "Status Konservasi": "Bervariasi, beberapa spesies terancam punah"
+    },
+    "Ayam": {
+        "Habitat": "Ayam banyak ditemukan di daerah pedesaan dan peternakan di seluruh dunia.",
+        "Fakta Unik": "Ayam mampu mengenali lebih dari 100 wajah ayam lain dan manusia di sekitarnya.",
+        "Klasifikasi Ilmiah": "Kingdom: Animalia | Filum: Chordata | Kelas: Aves | Ordo: Galliformes | Famili: Phasianidae",
+        "Status Konservasi": "Domestik (Tidak terancam punah)"
     }
 }
 
