@@ -1,20 +1,6 @@
-# ==== Core ====
-streamlit==1.38.0
-numpy==1.26.4
-pillow==10.4.0
-opencv-python==4.10.0.84
-
-# ==== Deep Learning ====
+streamlit>=1.36.0
 tensorflow==2.15.0
-ultralytics==8.2.50
-
-# ==== Utilities ====
-matplotlib==3.9.2
-pandas==2.2.3
-h5py==3.11.0
-scipy==1.13.1
-
-# ==== Optional (stabilitas & kompatibilitas) ====
-protobuf==4.25.3
-typing_extensions==4.12.2
-
+ultralytics==8.1.0
+opencv-python-headless
+numpy
+pillow
