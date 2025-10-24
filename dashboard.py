@@ -1,21 +1,25 @@
+# =====================================
+# ANIMAL VISION AI — YOLO + KERAS MODEL
+# =====================================
+
+import os
 import streamlit as st
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from ultralytics import YOLO
-import numpy as np
 from PIL import Image
-import glob
-import os
+import numpy as np
 import cv2
+import tempfile
 
-# ================================
+# ==============================
 # PAGE CONFIG
-# ================================
-st.set_page_config(page_title="🐾 Animal Vision AI - YOLO + TensorFlow", layout="wide")
+# ==============================
+st.set_page_config(page_title="🐾 Animal Vision AI", layout="wide")
 
-# ================================
-# CSS STYLE — Tema Cantik Elegan
-# ================================
+# ==============================
+# CUSTOM STYLE
+# ==============================
 st.markdown("""
     <style>
         .stApp {
@@ -64,28 +68,25 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ================================
-# LOAD MODEL YOLO + TENSORFLOW
-# ================================
+# ==============================
+# LOAD MODEL YOLO + KERAS
+# ==============================
 @st.cache_resource
 def load_models():
-    try:
-        yolo_model = YOLO("model/Rini Safariani_Laporan 4.pt")  # YOLO hasil training kamu
-    except:
-        yolo_model = YOLO("yolov8n.pt")  # fallback ke YOLO bawaan
-    classifier = tf.keras.models.load_model("model/model_Rini_Laporan 2.h5")
+    yolo_model = YOLO("model/Rini_Safariani_Laporan4.pt")  # model YOLO
+    classifier = tf.keras.models.load_model("model/model_Rini_Laporan2.h5")  # model klasifikasi
     return yolo_model, classifier
 
 try:
     yolo_model, classifier = load_models()
-    st.sidebar.success("✅ Model YOLO dan TensorFlow berhasil dimuat.")
+    st.sidebar.success("✅ Model YOLO & Keras berhasil dimuat.")
 except Exception as e:
     st.sidebar.error(f"❌ Gagal memuat model: {e}")
     st.stop()
 
-# ================================
-# CLASS NAMES & INFO
-# ================================
+# ==============================
+# CLASS NAMES & ANIMAL INFO
+# ==============================
 class_names = ["spider", "cat", "dog", "chicken", "horse", "butterfly", "fish"]
 
 animal_info = {
@@ -98,62 +99,55 @@ animal_info = {
     "fish": {"nama":"🐟 Ikan","habitat":"Air tawar & laut","makanan":"Plankton & serangga air","fakta":"Beberapa ikan tidur dengan mata terbuka."}
 }
 
-# ================================
-# NAVIGATION
-# ================================
-st.sidebar.title("🐾 Navigasi")
-page = st.sidebar.radio(
-    "Pilih Mode:",
-    ["🧠 Model Info", "🖼️ Deteksi & Klasifikasi", "ℹ️ Tentang Aplikasi"]
-)
+# ==============================
+# FUNGSI PEMROSESAN GAMBAR
+# ==============================
+def preprocess_image(pil_img, size=(128, 128)):
+    img_resized = pil_img.resize(size)
+    arr = image.img_to_array(img_resized)
+    arr = np.expand_dims(arr, axis=0) / 255.0
+    return arr
 
-# ================================
-# PAGE 1 — MODEL INFO
-# ================================
-if page == "🧠 Model Info":
-    st.markdown("<div class='title'>📦 Status Model</div>", unsafe_allow_html=True)
-    st.markdown("""
-    <div class='model-box'>
-        <h4>✅ Model YOLOv8 dan TensorFlow berhasil dimuat</h4>
-        <p><b>📁 YOLO:</b> Deteksi objek dengan bounding box</p>
-        <p><b>📁 TensorFlow:</b> Klasifikasi jenis hewan</p>
-    </div>
-    """, unsafe_allow_html=True)
+def predict_class(pil_img):
+    arr = preprocess_image(pil_img)
+    preds = classifier.predict(arr)
+    idx = int(np.argmax(preds))
+    confidence = float(np.max(preds))
+    label = class_names[idx] if idx < len(class_names) else "unknown"
+    return label, confidence
 
-# ================================
-# PAGE 2 — DETEKSI + KLASIFIKASI
-# ================================
-elif page == "🖼️ Deteksi & Klasifikasi":
-    st.markdown("<div class='title'>🐾 Deteksi dan Klasifikasi Hewan</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subtitle'>Gabungan YOLOv8 + TensorFlow 🌸</div>", unsafe_allow_html=True)
+def detect_objects(pil_img):
+    """Deteksi objek dengan YOLO dan beri bounding box."""
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+        pil_img.save(tmp.name)
+        results = yolo_model(tmp.name)
+        annotated = results[0].plot()
+        annotated_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
+        return Image.fromarray(annotated_rgb), results
 
-    uploaded_file = st.file_uploader("📤 Unggah gambar (.jpg .jpeg .png)", type=["jpg", "jpeg", "png"])
+# ==============================
+# HALAMAN UTAMA
+# ==============================
+st.markdown("<div class='title'>🐾 Animal Vision AI</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Deteksi & Klasifikasi Hewan menggunakan YOLOv8 dan TensorFlow 🌸</div>", unsafe_allow_html=True)
 
-    if uploaded_file:
-        img = Image.open(uploaded_file).convert("RGB")
-        st.image(img, caption="📸 Gambar Asli", width=400)
+uploaded_file = st.file_uploader("📤 Unggah gambar hewan (.jpg .jpeg .png)", type=["jpg", "jpeg", "png"])
 
-        st.markdown("---")
+if uploaded_file:
+    img = Image.open(uploaded_file).convert("RGB")
+    st.image(img, caption="📸 Gambar asli", width=400)
 
-        # 🔹 YOLO Object Detection
-        st.subheader("🔍 Hasil Deteksi Objek (YOLOv8)")
-        with st.spinner("Mendeteksi objek..."):
-            results = yolo_model(img)
-            result_img = results[0].plot()
-        st.image(result_img, caption="📦 Hasil Deteksi YOLO", use_container_width=True)
+    with st.spinner("🔍 Mendeteksi objek dan mengenali hewan..."):
+        detected_img, yolo_results = detect_objects(img)
+        label, conf = predict_class(img)
 
-        # 🔹 Klasifikasi TensorFlow
-        st.subheader("🧠 Hasil Klasifikasi Gambar")
-        img_resized = img.resize((128, 128))
-        img_array = image.img_to_array(img_resized)
-        img_array = np.expand_dims(img_array, axis=0) / 255.0
+    st.markdown("### 🧩 Hasil Deteksi Objek")
+    st.image(detected_img, caption="📦 Gambar dengan Bounding Box", use_container_width=True)
 
-        with st.spinner("Menganalisis gambar..."):
-            prediction = classifier.predict(img_array)
-            class_index = np.argmax(prediction)
-            confidence = np.max(prediction)
-            label = class_names[class_index]
+    st.markdown("---")
+    st.markdown("### 🧠 Hasil Klasifikasi")
 
+    if label in animal_info:
         info_obj = animal_info[label]
         st.markdown(f"""
         <div class='result-box'>
@@ -161,36 +155,20 @@ elif page == "🖼️ Deteksi & Klasifikasi":
             <b>🌍 Habitat:</b> {info_obj['habitat']}<br>
             <b>🍽️ Makanan:</b> {info_obj['makanan']}<br>
             <b>💡 Fakta menarik:</b> {info_obj['fakta']}<br><br>
-            <i>Confidence:</i> <b>{confidence*100:.2f}%</b>
+            <i>Confidence:</i> <b>{conf*100:.2f}%</b>
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.info("📁 Silakan unggah gambar untuk mulai mendeteksi dan mengklasifikasi.")
+        st.warning(f"Hasil klasifikasi: {label} (Confidence: {conf:.2%})")
+else:
+    st.info("📁 Silakan unggah gambar untuk mulai analisis hewan.")
 
-# ================================
-# PAGE 3 — ABOUT
-# ================================
-elif page == "ℹ️ Tentang Aplikasi":
-    st.markdown("<div class='title'>🌷 Tentang Animal Vision AI</div>", unsafe_allow_html=True)
-    st.markdown("""
-    <div class='model-box'>
-        <p><b>Animal Vision AI</b> adalah aplikasi gabungan antara <b>YOLOv8</b> (untuk deteksi objek)
-        dan <b>TensorFlow</b> (untuk klasifikasi gambar hewan).</p>
-        <ul>
-            <li>🔹 Deteksi objek otomatis dengan bounding box</li>
-            <li>🔹 Klasifikasi hewan berdasarkan citra</li>
-            <li>🎨 Antarmuka elegan dan interaktif</li>
-        </ul>
-        <p>💛 Dikembangkan oleh <b>Rini Safariani</b>.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ================================
+# ==============================
 # FOOTER
-# ================================
+# ==============================
 st.markdown("""
 <footer>
-    🌷 <b>Animal Vision AI</b> — by Rini<br>
-    YOLOv8 + TensorFlow in one elegant dashboard ✨
+    🌷 <b>Animal Vision AI</b> — by Rini Safariani<br>
+    Model: YOLO (.pt) & TensorFlow (.h5) berada di folder <code>model/</code>
 </footer>
 """, unsafe_allow_html=True)
