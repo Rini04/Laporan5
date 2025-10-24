@@ -17,3 +17,4 @@ scipy==1.13.1
 # ==== Optional (stabilitas & kompatibilitas) ====
 protobuf==4.25.3
 typing_extensions==4.12.2
+
